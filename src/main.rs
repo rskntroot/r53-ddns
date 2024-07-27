@@ -138,11 +138,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Check the status of the change request every 60 seconds
     loop {
-        let change_response = client
-            .get_change()
-            .id(&change_id)
-            .send()
-            .await?;
+        let change_response = client.get_change().id(&change_id).send().await?;
 
         // check the status
         if let Some(change_info) = change_response.change_info {

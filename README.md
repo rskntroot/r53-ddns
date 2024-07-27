@@ -72,6 +72,22 @@ $ r53-ddns -z  ${aws_dns_zone_id} -d example.com.
 The DNS record is currently up to date with the public IP: 10.0.88.219
 ```
 
+### Tests
+
+Yeah, I have em! Well... one of them.
+
+```
+$ cargo test
+   Compiling r53-ddns v0.1.0 (~/workspace/r53-ddns)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.81s
+     Running unittests src/main.rs (target/debug/deps/r53_ddns-9ff92b89721daeea)
+
+running 1 test
+test tests::get_public_ip_works ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+```
+
 ## Q&A
 
 > Why are you doing AWS calls instead of us nslookup and compare that?
