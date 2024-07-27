@@ -2,19 +2,21 @@
 
 ## Brief
 
-this was intended to solve the problem for when your local ISP force renews your PublicIP and no one can reach your might-as-well-be-a-toaster-minecraft server.
+this was intended to solve the problem of when your local ISP force renews your PublicIP and no one can reach your not-sure-if-toaster-or-minecraft-server.
 
-what this ended up as was a mockery of dynamic dns, progam/scripting, error handling, all in memory-safe rust. whatever that means, right?
+what it ended up as, was instead a mockery of dynamic dns, progam/scripting, error handling, all in memory-safe rust. whatever that means, right?
 
-> "this is the worst of example working code ive ever seen"
-> // "ah but you have seen the code working" -- cpt. rskntroot 2024
+> "this is the worst example of working code ive ever seen"
+> // "ah, but you have seen the code working"
+>
+> -- Rskntroot 2024
 
 ## Assumptions
 
 1. Your ISP randomly changes your PublicIP and that pisses you off.
 1. You have no idea how DDNS is actually supposed to work.
     - dns is all smoke and mirrors, confirmed.
-1. You just want something that will curl `ipv4.icanhazip.com` and push and update to Route53.
+1. You just want something that will curl `ipv4.icanhazip.com` and push the update to Route53.
 1. You plan on handjamming this into a cron job on your webserver/loadbalancer.
 1. ...
 1. Profit.
@@ -23,17 +25,19 @@ Congratulations, this is the package for you.
 
 ## Setup
 
-1. use out of below command to create AWS IAM Policy.
+1. use output of below command to create the IAM policy
     ``` zsh
     zone_id=<zone_id> envsubst < AllowRoute53RecordUpdate.policy
     ```
 1. create IAM user, generate access keys for automated service
-1. login on the machine where you built this binary
+1. log into aws with the acct on the machine where you install this binary
     ```
     aws sso login --profile
     ```
-1. setup a cron job to poll at your leisure
-
+1. setup a user-level cron job to poll at your leisure
+    ```
+    0 * * * * ~/home/lost/.r53-update-dns.sh
+    ```
 ## Usage
 
 ```
@@ -96,7 +100,7 @@ Why in the world would internal DNS give me a PublicIP? Imagine not implementing
 
 > Why did you do create this monster?
 
-To prove to myself that with the help of LLMs that even I could go from 0 to deployed tokio async rust binary in less than 8 hours. And thats exactly what I did.
+To prove to myself that with the help of LLMs that even I could go from nothing to a deployed tokio async rust binary in less than 8 hours. And thats exactly what I did.
 
 > wen IPv6?
 
