@@ -25,21 +25,22 @@ If so, this is for you.
     DNS_ZONE_ID=YOURZONEIDHERE \
     envsubst < aws.policy > Route53AllowRecordUpdate.policy
     ```
-1. create IAM user, generate access keys for automated service
-1. log into aws with the acct on the machine where you install this binary
+1. in aws, create IAM user, attach policy, generate access keys for automated service
+1. log into aws cli with the account you created above
     ```
     aws sso login --profile
     ```
 1. setup link in `/usr/bin`
     ``` zsh
-    ln -s -f ~/r53-ddns/target/release/r53-ddns /usr/bin/r53-ddns
+    ln -sf ~/r53-ddns/target/release/r53-ddns /usr/bin/r53-ddns
     ```
 1. setup systemd service and then install as normal
     ```zsh
     DNS_ZONE_ID=YOURZONEIDHERE \
     DOMAIN_NAME=your.domain.com. \
-    envsubst < r53-ddns.service | sudo  /etc/system/
+    envsubst < r53-ddns.service | sudo tee -a /etc/systemd/system/r53-ddns.service
     ```
+
 ## CLI Usage
 
 ```
