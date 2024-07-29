@@ -10,7 +10,7 @@
 				"route53:GetChange"
 			],
 			"Resource": [
-				"arn:aws:route53:::hostedzone/${zone_id}",
+				"arn:aws:route53:::hostedzone/${DNS_ZONE_ID}",
 				"arn:aws:route53:::change/*"
 			]
 		},

@@ -1,0 +1,16 @@
+[Unit]
+Description=Route53 Dynamic DNS Service
+After=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/usr/bin/r53-ddns -z ${DNS_ZONE_ID} -d ${DOMAIN_NAME}
+User=${USER}
+
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

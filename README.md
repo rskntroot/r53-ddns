@@ -1,108 +1,88 @@
 # r53-ddns
 
+Route53 Dynamic DNS
+
 ## Brief
 
-this was intended to solve the problem of when your local ISP force renews your PublicIP and no one can reach your not-sure-if-toaster-or-minecraft-server.
+Submits a Route53 `ChangeRequest` for updating `A` or `AAAA` records when PublicIP drift is detected.
 
-what it ended up as, was instead a mockery of dynamic dns, progam/scripting, error handling, all in memory-safe rust. whatever that means, right?
+Drift detection is determined by comparing http request to `icanhazip.com` and a DNS lookup to `cloudflare`.
 
-> "this is the worst example of working code ive ever seen"
-> // "ah, but you have seen the code working"
->
-> -- Rskntroot 2024
+This is intended to be installed on a public-facing loadbalancer.
 
 ## Assumptions
 
 1. Your ISP randomly changes your PublicIP and that pisses you off.
-1. You have no idea how DDNS is actually supposed to work.
-    - dns is all smoke and mirrors, confirmed.
-1. You just want something that will curl `ipv4.icanhazip.com` and push the update to Route53.
-1. You plan on handjamming this into a cron job on your webserver/loadbalancer.
-1. ...
-1. Profit.
+1. You just want something that will curl `ipv4.icanhazip.com`, check 3rd-party dns, and update Route53.
+1. Your Name records only contain a single IP. (future update maybe).
 
-Congratulations, this is the package for you.
+If so, this is for you.
 
 ## Setup
 
-1. use output of below command to create the IAM policy
-    ``` zsh
-    zone_id=<zone_id> envsubst < AllowRoute53RecordUpdate.policy
+1. setup `Route53AllowRecordUpdate.policy`
+    ```zsh
+    DNS_ZONE_ID=YOURZONEIDHERE \
+    envsubst < aws.policy > Route53AllowRecordUpdate.policy
     ```
 1. create IAM user, generate access keys for automated service
 1. log into aws with the acct on the machine where you install this binary
     ```
     aws sso login --profile
     ```
-1. setup a user-level cron job to poll at your leisure
+1. setup link in `/usr/bin`
+    ``` zsh
+    ln -s -f ~/r53-ddns/target/release/r53-ddns /usr/bin/r53-ddns
     ```
-    0 * * * * ~/home/lost/.r53-update-dns.sh
+1. setup systemd service and then install as normal
+    ```zsh
+    DNS_ZONE_ID=YOURZONEIDHERE \
+    DOMAIN_NAME=your.domain.com. \
+    envsubst < r53-ddns.service | sudo  /etc/system/
     ```
-## Usage
+## CLI Usage
 
 ```
 $ r53-ddns -h
 A CLI tool for correcting drift between your PublicIP and Route53 DNS A RECORD
 
-Usage: r53-ddns --zone-id <ZONE_ID> --domain-name <DOMAIN_NAME>
+Usage: r53-ddns --dns-zone-id <DNS_ZONE_ID> --domain-name <DOMAIN_NAME>
 
 Options:
-  -z, --zone-id <ZONE_ID>          DNS ZONE ID  (see AWS Console Route53)
+  -z, --dns-zone-id <DNS_ZONE_ID>  DNS ZONE ID  (see AWS Console Route53)
   -d, --domain-name <DOMAIN_NAME>  DOMAIN NAME  (ex. 'docs.rskio.com.')
   -h, --help                       Print help
 ```
 
-### Drift Detected
-
-``` zsh
-$ r53-ddns -z ${aws_dns_zone_id} -d smp.rskio.com.
-```
+### Example
 
 ```
-The dynamic IP provided by the ISP has drifted. 10.0.11.201 -> 10.0.88.219
-Requested DNS record update to PublicIP: 10.0.88.219
-Change ID: /change/C04224022UE1ZQA26RE7O, Status: Pending
-Change ID: /change/C04224022UE1ZQA26RE7O, Status: Insync
-The change request has been completed.
-```
+$ systemctl status r53-ddns.service
+● r53-ddns.service - Route53 Dynamic DNS Service
+     Loaded: loaded (/etc/systemd/system/r53-ddns.service; enabled; vendor preset: enabled)
+     Active: active (running) since Mon 2024-07-29 09:03:40 UTC; 7min ago
+   Main PID: 215630 (r53-ddns)
+      Tasks: 6 (limit: 18886)
+     Memory: 3.6M
+        CPU: 389ms
+     CGroup: /system.slice/r53-ddns.service
+             └─215630 /usr/bin/r53-ddns -z [##TRUNCATED##] -d rskio.com.
 
-### No Drift Detected
-
-``` zsh
-$ r53-ddns -z  ${aws_dns_zone_id} -d example.com.
-```
-
-```
-The DNS record is currently up to date with the public IP: 10.0.88.219
-```
-
-### Tests
-
-Yeah, I have em! Well... one of them.
-
-```
-$ cargo test
-   Compiling r53-ddns v0.1.0 (~/workspace/r53-ddns)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.81s
-     Running unittests src/main.rs (target/debug/deps/r53_ddns-9ff92b89721daeea)
-
-running 1 test
-test tests::get_public_ip_works ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+Jul 29 09:03:40 hostname systemd[1]: Started Route53 Dynamic DNS Service.
+Jul 29 09:03:40 hostname r53-ddns[215630]: [2024-07-29T09:03:40Z INFO  r53_ddns] starting with options: -z [##TRUNCATED##] -d rskio.com.
+Jul 29 09:09:41 hostname r53-ddns[215630]: [2024-07-29T09:09:41Z INFO  r53_ddns::dns] dynamic ip drift detected: 10.0.0.1 -> 71.211.88.219
+Jul 29 09:09:41 hostname r53-ddns[215630]: [2024-07-29T09:09:41Z INFO  r53_ddns::route53] requesting update to route53 record for A rskio.com. -> 71.211.88.219
+Jul 29 09:09:41 hostname r53-ddns[215630]: [2024-07-29T09:09:41Z INFO  r53_ddns::route53] change_id: /change/C02168177BNS6R50C32Q has status: Pending
+Jul 29 09:10:41 hostname r53-ddns[215630]: [2024-07-29T09:09:41Z INFO  r53_ddns::route53] change_id: /change/C02168177BNS6R50C32Q has status: Insync
 ```
 
 ## Q&A
 
-> Why are you doing AWS calls instead of us nslookup and compare that?
+> Why did you do create this monster in rust?
 
-Why in the world would internal DNS give me a PublicIP? Imagine not implementing internal DNS.
-
-> Why did you do create this monster?
-
-To prove to myself that with the help of LLMs that even I could go from nothing to a deployed tokio async rust binary in less than 8 hours. And thats exactly what I did.
+To be able to handle errors in the future.
 
 > wen IPv6?
 
-Stfu, John. How about, wen PR?
+It should work with IPv6.
 

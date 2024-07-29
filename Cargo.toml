@@ -6,6 +6,11 @@ edition = "2021"
 [dependencies]
 aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
 aws-sdk-route53 = "1.37.0"
-tokio = { version = "1", features = ["full"] }
 clap = { version = "4.5.11", features = ["derive"] }
+env_logger = "0.11"
+log = "0.4"
 reqwest = { version = "0.12.5", features = ["blocking", "json"] }
+thiserror = "1.0"
+tokio = { version = "1", features = ["full"] }
+trust-dns-proto = "0.23.2"
+trust-dns-resolver = "0.23.2"
