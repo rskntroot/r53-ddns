@@ -1,5 +1,7 @@
 # r53-ddns
 
+[https://github.com/rskntroot/r53-ddns](https://github.com/rskntroot/r53-ddns)
+
 Route53 Dynamic DNS
 
 ## Brief
@@ -28,7 +30,7 @@ If so, this is for you.
 1. in aws, create IAM user, attach policy, generate access keys for automated service
 1. log into aws cli with the account you created above
     ```
-    aws sso login --profile
+    aws configure
     ```
 1. setup link in `/usr/bin`
     ``` zsh
@@ -55,7 +57,20 @@ Options:
   -h, --help                       Print help
 ```
 
-### Example
+### Service
+
+``` zsh
+export DNS_ZONE_ID=YOUR-DNS-ZONE-ID
+export DOMAIN_NAME=YOUR-DOMAIN-NAME
+export USER=$(whoami)
+```
+
+``` zsh
+envsubst < r53-ddns.service | sudo tee -a /etc/systemd/system/r53-ddns.service
+sudo systemctl daemon-reload
+sudo systemctl start r53-ddns.service
+sudo systemctl status r53-ddns.service
+```
 
 ```
 $ systemctl status r53-ddns.service
@@ -86,4 +101,3 @@ To be able to handle errors in the future.
 > wen IPv6?
 
 It should work with IPv6.
-
