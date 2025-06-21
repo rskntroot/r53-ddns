@@ -1,8 +1,8 @@
 # r53-ddns
 
-[https://github.com/rskntroot/r53-ddns](https://github.com/rskntroot/r53-ddns)
 
-Route53 Dynamic DNS
+
+[r53-ddns](https://github.com/rskntroot/r53-ddns) is a Dynamic DNS client for updating [Route53](https://aws.amazon.com/route53/) records
 
 ## Brief
 
